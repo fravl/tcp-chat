@@ -25,6 +25,9 @@ def receive():
 def write():
     while True:
         message = input("")
+        if(message == "exit"):
+            s.close()
+            break
         s.send(message.encode('ascii'))
 
 receive_thread = threading.Thread(target=receive)
