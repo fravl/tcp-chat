@@ -5,7 +5,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 host = socket.gethostname() # Get server host name
 port = 8080 
 
-uid = input("Choose a nickname: ")
+uid = input("Enter nickname: ")
 
 
 s.connect((host, port)) # Connect to server

@@ -39,6 +39,9 @@ def send_message(from_uid: str, to_uid: str, message: str):
         print("send to group, not yet implemented")    
 
 def handle(client: socket, uid: str):
+    if(not clients.get(uid).is_online):
+        clients.get(uid).is_online = True
+
     while True:
         try:           
             msg: ParsedMsg = parse(client.recv(1024).decode('ascii'))
@@ -63,9 +66,13 @@ def receive():
         print(f"Connected with {str(address)}")
         client.send('NICK'.encode('ascii'))
         uid: str = client.recv(1024).decode('ascii')
-        clients.update({uid: Client(uid, client)})
-        client.send('Connected'.encode('ascii'))
-        
+        if(uid not in clients.keys()):
+            clients.update({uid: Client(uid, client)})
+            client.send(f'Welcome {uid}!'.encode('ascii'))       
+        else:
+            client.send(f'Welcome back {uid}!'.encode('ascii'))        
+
+
         thread = threading.Thread(target=handle, args=(client, uid))
         thread.start()
 
