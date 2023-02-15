@@ -1,6 +1,7 @@
 import socket
 import threading
 from typing import List
+from msg_parser import *
 
 host = "::" # Listen on all available interfaces (both ipv4 and ipv6)
 port = 8080 
@@ -30,16 +31,24 @@ else:
 s.listen(5) # Now wait for client connection.
 
 
-def broadcast(message: str):
-    for v in clients.values():
-        v.socket.send(message)
-
+def send_message(from_uid: str, to_uid: str, message: str):    
+    if(to_uid in clients.keys()):
+        # handle offline client
+        clients.get(to_uid).socket.send(f"{from_uid}: {message}".encode('ascii'))
+    if(to_uid in groups.keys()):
+        print("send to group, not yet implemented")    
 
 def handle(client: socket, uid: str):
     while True:
-        try:
-            message = client.recv(1024)
-            broadcast(message)
+        try:           
+            msg: ParsedMsg = parse(client.recv(1024).decode('ascii'))
+            match msg["action"]:
+                case Action.MESSAGE:
+                    send_message(uid, msg["args"]["uid"], msg["args"]["msg"])
+        
+        except ParserException as e:
+            clients.get(uid).socket.send(f"Error: {e}".encode('ascii'))
+
         except Exception as e:
             print(e)
             clients.get(uid).is_online = False
