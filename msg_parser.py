@@ -47,15 +47,15 @@ def parse(msg: str) -> ParsedMsg:
             if(len(split_msg) <=3):
                 raise ParserException(f"Missing user in command {msg}")
             uids = []  
-            for user_uid in split_msg[3:]:
-                uids.append(user_uid)
+            for client_uid in split_msg[3:]:
+                uids.append(client_uid)
             
             if(split_msg[2] == "add"):
                 return {
                     "action": Action.GROUP_ADD_USER,
                     "args": {
                         "group_uid": split_msg[1],
-                        "user_uids": uids
+                        "client_uids": uids
                     }
                 }
             else:
@@ -63,7 +63,7 @@ def parse(msg: str) -> ParsedMsg:
                     "action": Action.GROUP_REMOVE_USER,
                     "args": {
                         "group_uid": split_msg[1],
-                        "user_uids": uids
+                        "client_uids": uids
                     }
                 }      
 

@@ -19,9 +19,11 @@ class Group():
     def __init__(self, uid: str, owner: Client):
         self.uid: str = uid
         self.owner: Client = owner
-        self.members: List[Client] = [] 
+        self.members: List[Client] = []     
 
 class UidNotFoundException(Exception):
+    pass
+class DuplicateUidException(Exception):
     pass
 
 def log(event: str):
@@ -50,8 +52,6 @@ def send_message(sender: Client, reciever: Client, message: str):
         sender.socket.send(f"{datetime.now()}: {reciever.uid} is offline. Last seen at {reciever.last_online}".encode('ascii'))
 
 
-
-
 def process_message(sender: Client, message: ParsedMsg): 
     reciever_uid = message["args"]["uid"]     
     message_content = message['args']['msg']    
@@ -64,6 +64,40 @@ def process_message(sender: Client, message: ParsedMsg):
     else: 
         raise UidNotFoundException(f"No known group or user with name {reciever_uid}")
 
+def create_group(uid: str, owner: Client):
+    if(uid in groups.keys()):
+        raise DuplicateUidException(f"Group name {uid} already exists")
+    if(uid in clients.keys()):
+        raise DuplicateUidException(f"Group name {uid} not allowed. User with such a name exists already.")
+
+    groups.update({uid: Group(uid, owner)})
+
+def delete_group(uid: str):
+    if(uid not in groups.keys()):
+        raise UidNotFoundException(f"No known group with name {uid}")
+    groups.pop(uid)
+
+def group_add_member(group_uid: str, client_uid: str):
+    if(group_uid not in groups.keys()):
+        raise UidNotFoundException(f"No known group with name {group_uid}")
+    if(client_uid not in clients.keys()):
+        raise UidNotFoundException(f"No known user with name {group_uid}")
+
+    group: Group = groups.get(group_uid)    
+    group.members.append(clients.get(client_uid))
+
+def group_remove_member(group_uid: str, client_uid: str):
+    if(group_uid not in groups.keys()):
+        raise UidNotFoundException(f"No known group with name {group_uid}")
+    if(client_uid not in clients.keys()):
+        raise UidNotFoundException(f"No known user with name {group_uid}")
+
+    group: Group = groups.get(group_uid)    
+    group.members.remove(clients.get(client_uid))
+
+def client_can_modify_group(group_uid:str, client: Client):
+    pass
+
 def handle(client: Client):
     if(not client.is_online):
         client.is_online = True
@@ -74,12 +108,21 @@ def handle(client: Client):
             match msg["action"]:
                 case Action.MESSAGE:                    
                     process_message(client, msg)
+                case Action.GROUP_CREATE:
+                    create_group(msg['args']['group_uid'], client)
+                case Action.GROUP_DELETE:
+                    delete_group(msg['args']['group_uid'])
+                case Action.GROUP_ADD_USER:
+                    pass
+                case Action.GROUP_REMOVE_USER:
+                    pass
+                
+
         
         except ParserException as e:
             client.socket.send(f"Error: {e}".encode('ascii'))
         except UidNotFoundException as e:
             client.socket.send(f"{e}".encode('ascii'))
-
 
         except Exception as e:
             print(e)
@@ -114,3 +157,4 @@ def receive():
         thread.start()
 
 receive()
+
