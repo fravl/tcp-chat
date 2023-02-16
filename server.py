@@ -41,11 +41,15 @@ else:
 s.listen(5) # Now wait for client connection.
 
 def send_message(sender: Client, reciever: Client, message: str):   
-    text = f"{sender.uid}@{reciever.uid}: {message}"
+    text = f"{datetime.now()}: {sender.uid}@{reciever.uid}: {message}"
     if(reciever.is_online):
         reciever.socket.send(text.encode('ascii'))
+        sender.socket.send(f"{datetime.now()}: {reciever.uid} recieved your message".encode('ascii'))
     else:
         reciever.buffered_messages.append(text)    
+        sender.socket.send(f"{datetime.now()}: {reciever.uid} is offline. Last seen at {reciever.last_online}".encode('ascii'))
+
+
 
 
 def process_message(sender: Client, message: ParsedMsg): 
@@ -55,9 +59,10 @@ def process_message(sender: Client, message: ParsedMsg):
     if(reciever_uid in clients.keys()):
         reciever: Client = clients.get(reciever_uid)
         send_message(sender, reciever, message_content)
-    if(reciever_uid in groups.keys()):
-        print("send to group, not yet implemented") 
-    raise UidNotFoundException(f"No known group or user with name {reciever_uid}")
+    elif(reciever_uid in groups.keys()):
+        print("send to group, not yet implemented")
+    else: 
+        raise UidNotFoundException(f"No known group or user with name {reciever_uid}")
 
 def handle(client: Client):
     if(not client.is_online):
@@ -100,9 +105,7 @@ def receive():
             client_socket.send(f'Welcome back {uid}!'.encode('ascii'))  
             buffered_messages: List[str] = clients.get(uid).buffered_messages
             if len(buffered_messages) > 0:
-                for msg in buffered_messages.copy():
-                    print(len(buffered_messages))
-                    print(msg)
+                for msg in buffered_messages.copy():                   
                     client_socket.send(msg.encode('ascii'))   
                     buffered_messages.remove(msg)
 
