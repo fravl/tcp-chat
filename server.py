@@ -21,8 +21,12 @@ class Group():
         self.owner: Client = owner
         self.members: List[Client] = [] 
 
+class UidNotFoundException(Exception):
+    pass
+
 def log(event: str):
     print(f"{datetime.now()}: {event}")
+
 
 
 clients = {}
@@ -52,7 +56,8 @@ def process_message(sender: Client, message: ParsedMsg):
         reciever: Client = clients.get(reciever_uid)
         send_message(sender, reciever, message_content)
     if(reciever_uid in groups.keys()):
-        print("send to group, not yet implemented")    
+        print("send to group, not yet implemented") 
+    raise UidNotFoundException(f"No known group or user with name {reciever_uid}")
 
 def handle(client: Client):
     if(not client.is_online):
@@ -67,6 +72,9 @@ def handle(client: Client):
         
         except ParserException as e:
             client.socket.send(f"Error: {e}".encode('ascii'))
+        except UidNotFoundException as e:
+            client.socket.send(f"{e}".encode('ascii'))
+
 
         except Exception as e:
             print(e)
