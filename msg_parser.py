@@ -29,6 +29,42 @@ def parse(msg: str) -> ParsedMsg:
             "args": {'uid': recipient_uid, 'msg': content}
             }
     if(str(split_msg[0]) == "group"):
-        # to be implemented
-        raise ParserException(f"Groups feature not implemented yet")
-    raise ParserException(f"Unknown command: {split_msg[0]}")
+        split_msg = msg.split(" ")
+        if(len(split_msg) <= 2):
+            raise ParserException(f"Unkown command {msg}")
+
+        if(split_msg[2] == "create"):
+            return {
+                "action": Action.GROUP_CREATE,
+                "args": {"group_uid": split_msg[1]}
+            }
+        if(split_msg[2] == "delete"):
+            return {
+                "action": Action.GROUP_DELETE,
+                "args": {"group_uid": split_msg[1]}
+            }
+        if(split_msg[2] == "add" or split_msg[2] == "remove"):
+            if(len(split_msg) <=3):
+                raise ParserException(f"Missing user in command {msg}")
+            uids = []  
+            for user_uid in split_msg[3:]:
+                uids.append(user_uid)
+            
+            if(split_msg[2] == "add"):
+                return {
+                    "action": Action.GROUP_ADD_USER,
+                    "args": {
+                        "group_uid": split_msg[1],
+                        "user_uids": uids
+                    }
+                }
+            else:
+                return {
+                    "action": Action.GROUP_REMOVE_USER,
+                    "args": {
+                        "group_uid": split_msg[1],
+                        "user_uids": uids
+                    }
+                }      
+
+    raise ParserException(f"Unknown command: {msg}")
