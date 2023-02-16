@@ -1,6 +1,7 @@
 import socket
 import threading
 from typing import List
+from datetime import datetime
 from msg_parser import *
 
 host = "::" # Listen on all available interfaces (both ipv4 and ipv6)
@@ -11,12 +12,16 @@ class Client():
         self.uid: str = uid
         self.socket: socket = client_socket
         self.is_online: bool = True
+        self.last_online: datetime.date = datetime.now()
         self.buffered_messages: List[str] = [] 
     
 class Group():
     def __init__(self, uid: str):
         self.uid: str = uid
         self.members: List[Client] = [] 
+
+def log(event: str):
+    print(f"{datetime.now()}: {event}")
 
 
 clients = {}
@@ -50,22 +55,23 @@ def handle(client: socket, uid: str):
                     send_message(uid, msg["args"]["uid"], msg["args"]["msg"])
         
         except ParserException as e:
-            clients.get(uid).socket.send(f"Error: {e}".encode('ascii'))
+            client.send(f"Error: {e}".encode('ascii'))
 
         except Exception as e:
             print(e)
             clients.get(uid).is_online = False
-            print("Client connection closed")
+            clients.get(uid).last_online = datetime.now()
+            log(f"Client {uid} disconnected")
             client.close()
             break
 
 def receive():
-    print("Server started")
+    log("Server started")
     while True:
         client,address = s.accept()
-        print(f"Connected with {str(address)}")
         client.send('NICK'.encode('ascii'))
         uid: str = client.recv(1024).decode('ascii')
+        log(f"{uid} connected from {str(address)}")
         if(uid not in clients.keys()):
             clients.update({uid: Client(uid, client)})
             client.send(f'Welcome {uid}!'.encode('ascii'))       
