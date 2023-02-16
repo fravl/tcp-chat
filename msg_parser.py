@@ -20,9 +20,13 @@ def parse(msg: str) -> ParsedMsg:
     split_msg = msg.split(None, 1)
     if(str(split_msg[0]).startswith("@")):
         recipient_uid = split_msg[0][1:]
+        if(len(split_msg)>1):
+            content = split_msg[1]
+        else:
+            content = ""
         return {
             "action": Action.MESSAGE, 
-            "args": {'uid': recipient_uid, 'msg': split_msg[1]}
+            "args": {'uid': recipient_uid, 'msg': content}
             }
     if(str(split_msg[0]) == "group"):
         # to be implemented

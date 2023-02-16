@@ -1,6 +1,5 @@
 import socket 
 import threading
-import sys
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 host = socket.gethostname() # Get server host name
@@ -26,7 +25,7 @@ def receive():
 def write():
     while True:
         message = input("")
-        print('\033[1A' + '\033[K', end='')
+        #print('\033[1A' + '\033[K', end='')
         if(message == "exit"):
             s.close()
             break
