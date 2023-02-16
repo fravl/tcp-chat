@@ -36,70 +36,70 @@ else:
 
 s.listen(5) # Now wait for client connection.
 
-def send_message(sender_uid: str, reciever_uid: str, message: str):   
-    text = f"{sender_uid}@{reciever_uid}: {message}"
-
-    reciever: Client = clients.get(reciever_uid)
-    sender: Client = clients.get(sender_uid)
+def send_message(sender: Client, reciever: Client, message: str):   
+    text = f"{sender.uid}@{reciever.uid}: {message}"
     if(reciever.is_online):
         reciever.socket.send(text.encode('ascii'))
     else:
         reciever.buffered_messages.append(text)    
 
 
-def process_message(sender_uid: str, message: ParsedMsg): 
-    reciever_uid = message["args"]["uid"]   
-    message_content = message['args']['msg']
+def process_message(sender: Client, message: ParsedMsg): 
+    reciever_uid = message["args"]["uid"]     
+    message_content = message['args']['msg']    
+
     if(reciever_uid in clients.keys()):
-        # handle offline client
-        send_message(sender_uid, reciever_uid, message_content)
+        reciever: Client = clients.get(reciever_uid)
+        send_message(sender, reciever, message_content)
     if(reciever_uid in groups.keys()):
         print("send to group, not yet implemented")    
 
-def handle(client: socket, uid: str):
-    if(not clients.get(uid).is_online):
-        clients.get(uid).is_online = True
+def handle(client: Client):
+    if(not client.is_online):
+        client.is_online = True
 
     while True:
         try:           
-            msg: ParsedMsg = parse(client.recv(1024).decode('ascii'))
+            msg: ParsedMsg = parse(client.socket.recv(1024).decode('ascii'))
             match msg["action"]:
                 case Action.MESSAGE:                    
-                    process_message(uid, msg)
+                    process_message(client, msg)
         
         except ParserException as e:
-            client.send(f"Error: {e}".encode('ascii'))
+            client.socket.send(f"Error: {e}".encode('ascii'))
 
         except Exception as e:
             print(e)
-            clients.get(uid).is_online = False
-            clients.get(uid).last_online = datetime.now()
-            log(f"Client {uid} disconnected")
-            client.close()
+            client.is_online = False
+            client.last_online = datetime.now()
+            log(f"Client {client.uid} disconnected")
+            client.socket.close()
             break
 
 def receive():
     log("Server started")
     while True:
-        client,address = s.accept()
-        client.send('NICK'.encode('ascii'))
-        uid: str = client.recv(1024).decode('ascii')
+        client_socket,address = s.accept()
+        client_socket.send('NICK'.encode('ascii'))
+        uid: str = client_socket.recv(1024).decode('ascii')
         log(f"{uid} connected from {str(address)}")
+
+
         if(uid not in clients.keys()):
-            clients.update({uid: Client(uid, client)})
-            client.send(f'Welcome {uid}!'.encode('ascii'))       
+            clients.update({uid: Client(uid, client_socket)})
+            client_socket.send(f'Welcome {uid}!'.encode('ascii'))       
         else:
-            client.send(f'Welcome back {uid}!'.encode('ascii'))  
+            client_socket.send(f'Welcome back {uid}!'.encode('ascii'))  
             buffered_messages: List[str] = clients.get(uid).buffered_messages
             if len(buffered_messages) > 0:
                 for msg in buffered_messages.copy():
                     print(len(buffered_messages))
                     print(msg)
-                    client.send(msg.encode('ascii'))   
+                    client_socket.send(msg.encode('ascii'))   
                     buffered_messages.remove(msg)
 
 
-        thread = threading.Thread(target=handle, args=(client, uid))
+        thread = threading.Thread(target=handle, args=(clients.get(uid),))
         thread.start()
 
 receive()
