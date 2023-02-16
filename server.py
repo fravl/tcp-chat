@@ -65,7 +65,7 @@ def handle(client: socket, uid: str):
             msg: ParsedMsg = parse(client.recv(1024).decode('ascii'))
             match msg["action"]:
                 case Action.MESSAGE:                    
-                    process_message(uid, msg["args"]["uid"], msg["args"]["msg"])
+                    process_message(uid, msg)
         
         except ParserException as e:
             client.send(f"Error: {e}".encode('ascii'))
@@ -89,7 +89,14 @@ def receive():
             clients.update({uid: Client(uid, client)})
             client.send(f'Welcome {uid}!'.encode('ascii'))       
         else:
-            client.send(f'Welcome back {uid}!'.encode('ascii'))        
+            client.send(f'Welcome back {uid}!'.encode('ascii'))  
+            buffered_messages: List[str] = clients.get(uid).buffered_messages
+            if len(buffered_messages) > 0:
+                for msg in buffered_messages.copy():
+                    print(len(buffered_messages))
+                    print(msg)
+                    client.send(msg.encode('ascii'))   
+                    buffered_messages.remove(msg)
 
 
         thread = threading.Thread(target=handle, args=(client, uid))
