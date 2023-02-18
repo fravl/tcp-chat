@@ -41,7 +41,7 @@ def process_message(sender: Client, message: ParsedMsg):
     reciever_uid = message["args"]["uid"]     
     message_content = message['args']['msg'] 
     
-    message_text = f"{datetime.now()}: {sender.uid}@{reciever_uid}: {message_content}"  
+    message_text = f"{datetime.now()}: {sender.uid}@{reciever_uid}: {message_content}\n"  
 
     if(db.has_client(reciever_uid)):
         reciever: Client = db.get_client(reciever_uid)
@@ -67,16 +67,16 @@ def handle(client: Client):
                 case Action.GROUP_CREATE:
                     group_uid: str = msg['args']['group_uid']
                     db.create_group(group_uid, client)
-                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} created{bcolors.ENDC}".encode('ascii')) 
+                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} created{bcolors.ENDC}\n".encode('ascii')) 
                 case Action.GROUP_DELETE:
                     group_uid: str = msg['args']['group_uid']
                     db.delete_group(group_uid, client)
-                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} deleted{bcolors.ENDC}".encode('ascii'))
+                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} deleted{bcolors.ENDC}\n".encode('ascii'))
                 case Action.GROUP_RENAME:
                     group_uid: str = msg['args']['group_uid']
                     new_uid: str = msg['args']['new_uid']
                     db.rename_group(group_uid, new_uid, client)
-                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} renamed to {new_uid}{bcolors.ENDC}".encode('ascii'))
+                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} renamed to {new_uid}{bcolors.ENDC}\n".encode('ascii'))
 
                 case Action.GROUP_ADD_USER:
                     group: Group = db.get_group(msg['args']['group_uid'])
@@ -85,12 +85,12 @@ def handle(client: Client):
                         try:
                             new_member: Client = db.get_client(uid)
                             if(new_member in group.members):
-                                client.socket.send(f"{bcolors.WARNING}User {uid} already in {group.uid}{bcolors.ENDC}".encode('ascii')) 
+                                client.socket.send(f"{bcolors.WARNING}User {uid} already in {group.uid}{bcolors.ENDC}\n".encode('ascii')) 
                             else:
                                 group.add_member(new_member, client)
-                                client.socket.send(f"{bcolors.OKGREEN}User {uid} added to {group.uid}{bcolors.ENDC}".encode('ascii')) 
+                                client.socket.send(f"{bcolors.OKGREEN}User {uid} added to {group.uid}{bcolors.ENDC}\n".encode('ascii')) 
                         except UidNotFoundException as e:
-                            client.socket.send(f"{bcolors.FAIL}Error{bcolors.ENDC}: {e}".encode('ascii')) 
+                            client.socket.send(f"{bcolors.FAIL}Error{bcolors.ENDC}: {e}\n".encode('ascii')) 
                             continue                       
                 case Action.GROUP_REMOVE_USER:
                     group: Group = db.get_group(msg['args']['group_uid'])
@@ -99,16 +99,16 @@ def handle(client: Client):
                         try:
                             to_remove: Client = db.get_client(uid)
                             if(to_remove not in group.members):
-                                client.socket.send(f"{bcolors.WARNING}User {uid} is not in {group.uid}{bcolors.ENDC}".encode('ascii')) 
+                                client.socket.send(f"{bcolors.WARNING}User {uid} is not in {group.uid}{bcolors.ENDC}\n".encode('ascii')) 
                             else:
                                 group.remove_member(to_remove, client)
-                                client.socket.send(f"{bcolors.OKGREEN}User {uid} removed from {group.uid}{bcolors.ENDC}".encode('ascii')) 
+                                client.socket.send(f"{bcolors.OKGREEN}User {uid} removed from {group.uid}{bcolors.ENDC}\n".encode('ascii')) 
                         except UidNotFoundException as e:
-                            client.socket.send(f"{bcolors.FAIL}Error{bcolors.ENDC}: {e}".encode('ascii')) 
+                            client.socket.send(f"{bcolors.FAIL}Error{bcolors.ENDC}: {e}\n".encode('ascii')) 
                             continue
                 
         except ServerException as e:
-            client.socket.send(f"{bcolors.FAIL}Error{bcolors.ENDC}: {e}".encode('ascii'))        
+            client.socket.send(f"{bcolors.FAIL}Error{bcolors.ENDC}: {e}\n".encode('ascii'))        
             
         except Exception as e:
             print(e)
@@ -129,9 +129,9 @@ def receive():
 
         if(not db.has_client(uid)):
             db.create_client(uid, client_socket)
-            client_socket.send(f'Welcome {uid}!'.encode('ascii'))       
+            client_socket.send(f'Welcome {uid}!\n'.encode('ascii'))       
         else:
-            client_socket.send(f'Welcome back {uid}!'.encode('ascii'))  
+            client_socket.send(f'Welcome back {uid}!\n'.encode('ascii'))  
             buffered_messages: List[str] = db.get_client(uid).buffered_messages
             if len(buffered_messages) > 0:
                 for msg in buffered_messages.copy():                   

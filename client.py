@@ -17,7 +17,8 @@ def receive():
             if message == 'NICK':
                 s.send(uid.encode('ascii'))
             else:
-                print(message)
+                for line in message.splitlines():
+                    print(line)
         except:
             s.close()
             break
