@@ -6,7 +6,7 @@ from exceptions import UidNotFoundException, DuplicateUidException, OperationNot
 class Client():
     def __init__(self, uid: str, client_socket: socket):
         self.uid: str = uid
-        self.socket: socket = client_socket
+        self.socket: socket.SocketType = client_socket
         self.is_online: bool = True
         self.last_online: datetime.date = datetime.now()
         self.buffered_messages: List[str] = [] 
