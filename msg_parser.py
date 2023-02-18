@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import TypedDict, List
+from typing import TypedDict
+from exceptions import ParserException
 
 class Action(Enum):
     MESSAGE = "message"
@@ -13,8 +14,6 @@ class ParsedMsg(TypedDict):
     action: Action
     args: dict
 
-class ParserException(Exception):
-    pass
 
 def parse(msg: str) -> ParsedMsg:
     split_msg = msg.split(None, 1)
