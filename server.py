@@ -7,6 +7,8 @@ from exceptions import ServerException, UidNotFoundException
 from persistence import Group, Client, Persistence
 from colors import bcolors
 
+import sys, os
+
 
 host = "::" # Listen on all available interfaces (both ipv4 and ipv6)
 port = 8080 
@@ -54,7 +56,6 @@ def process_message(sender: Client, message: ParsedMsg):
         group_broadcast(sender, group, message_text)
     else: 
         raise UidNotFoundException(f"No known group or user with name {reciever_uid}")
-
 
 
 def handle(client: Client):
@@ -138,6 +139,7 @@ def receive():
             db.create_client(uid, client_socket)
             client_socket.send(f'Welcome {uid}!\n'.encode('ascii'))       
         else:
+            db.get_client(uid).socket = client_socket
             client_socket.send(f'Welcome back {uid}!\n'.encode('ascii'))  
             buffered_messages: List[str] = db.get_client(uid).buffered_messages
             if len(buffered_messages) > 0:
