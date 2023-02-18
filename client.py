@@ -1,10 +1,11 @@
 import socket 
 import threading
+import os
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 host = socket.gethostname() # Get server host name
 port = 8080 
-
+os.system('cls' if os.name == 'nt' else 'clear')
 uid = input("Enter nickname: ")
 
 
