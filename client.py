@@ -1,11 +1,28 @@
 import socket 
 import threading
 import os
+import argparse
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    'protocol', 
+    metavar='P', 
+    type=str, 
+    nargs='?',
+    choices=['ipv4','ipv6'], 
+    default='ipv6',
+    help="choose ipv4 or ipv6 protocol for the client"
+)
+
+args = parser.parse_args()
+if(args.protocol == 'ipv4'):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+else:
+    s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM) 
+
 host = socket.gethostname() # Get server host name
 port = 8080 
-os.system('cls' if os.name == 'nt' else 'clear')
+os.system('cls' if os.name == 'nt' else 'clear') # clear console
 uid = input("Enter nickname: ")
 
 
