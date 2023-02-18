@@ -3,6 +3,14 @@ import threading
 import os
 import argparse
 
+help = "@<name>: write to another user or group with name <name>\n" \
+    "group <name> create: create a group with name <name>\n" \
+    "group <name> delete: delete group\n" \
+    "group <name> add <user>: add one or more users to group. separate users by spaces.\n" \
+    "group <name> remove <user>: remove one or more users from group. separate users by spaces.\n" \
+    "group <name> rename <name>: rename a group\n" \
+    "exit: close the chat client\n" \
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     'protocol', 
@@ -23,8 +31,9 @@ else:
 host = socket.gethostname() # Get server host name
 port = 8080 
 os.system('cls' if os.name == 'nt' else 'clear') # clear console
-uid = input("Enter nickname: ")
 
+print("Welcome to the chat client. After entering your nickname, write help to see available commands.")
+uid = input("Enter nickname: ")
 
 s.connect((host, port)) # Connect to server
 
@@ -43,7 +52,10 @@ def receive():
 
 def write():
     while True:
-        message = input("")     
+        message = input("")    
+        if(message == "help"):            
+            print(help)
+            continue
         if(message == "exit"):
             s.close()
             break
