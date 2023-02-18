@@ -7,9 +7,6 @@ from exceptions import ServerException, UidNotFoundException
 from persistence import Group, Client, Persistence
 from colors import bcolors
 
-import sys, os
-
-
 host = "::" # Listen on all available interfaces (both ipv4 and ipv6)
 port = 8080 
 
