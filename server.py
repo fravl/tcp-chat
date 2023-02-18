@@ -26,27 +26,29 @@ s.listen(5) # Now wait for client connection.
 db = Persistence()
 
 def send_message(sender: Client, reciever: Client, message: str):   
-    text = f"{datetime.now()}: {sender.uid}@{reciever.uid}: {message}"
     if(reciever.is_online):
-        reciever.socket.send(text.encode('ascii'))
+        reciever.socket.send(message.encode('ascii'))
         sender.socket.send(f"{datetime.now()}: {reciever.uid} recieved your message".encode('ascii'))
     else:
-        reciever.buffered_messages.append(text)    
+        reciever.buffered_messages.append(message)    
         sender.socket.send(f"{datetime.now()}: {reciever.uid} is offline. Last seen at {reciever.last_online}".encode('ascii'))
 
 def group_broadcast(sender: Client, group: Group, message: str):
-    pass
-
+    for member in group.members:
+        send_message(sender, member, message)
 
 def process_message(sender: Client, message: ParsedMsg): 
     reciever_uid = message["args"]["uid"]     
-    message_content = message['args']['msg']    
+    message_content = message['args']['msg'] 
+    
+    message_text = f"{datetime.now()}: {sender.uid}@{reciever_uid}: {message_content}"  
 
     if(db.has_client(reciever_uid)):
         reciever: Client = db.get_client(reciever_uid)
-        send_message(sender, reciever, message_content)
+        send_message(sender, reciever, message_text)
     elif(db.has_group(reciever_uid)):
-        print("send to group, not yet implemented")
+        group: Group = db.get_group(reciever_uid)
+        group_broadcast(sender, group, message_text)
     else: 
         raise UidNotFoundException(f"No known group or user with name {reciever_uid}")
 
