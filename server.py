@@ -29,10 +29,10 @@ def send_message(sender: Client, reciever: Client, message: str):
     if(sender is not reciever):
         if(reciever.is_online):
             reciever.socket.send(message.encode('ascii'))
-            sender.socket.send(f"{datetime.now()}: {reciever.uid} recieved your message".encode('ascii'))
+            sender.socket.send(f"{datetime.now().strftime('%Y-%m-%d %H:%M')}: {reciever.uid} recieved your message".encode('ascii'))
         else:
             reciever.buffered_messages.append(message)    
-            sender.socket.send(f"{datetime.now()}: {reciever.uid} is offline. Last seen at {reciever.last_online}".encode('ascii'))
+            sender.socket.send(f"{datetime.now().strftime('%Y-%m-%d %H:%M')}: {reciever.uid} is offline. Last seen at {reciever.last_online}".encode('ascii'))
 
 def group_broadcast(sender: Client, group: Group, message: str):
     for i, member in enumerate(group.members):
@@ -44,7 +44,7 @@ def process_message(sender: Client, message: ParsedMsg):
     reciever_uid = message["args"]["uid"]     
     message_content = message['args']['msg'] 
     
-    message_text = f"{datetime.now()}: {sender.uid}@{reciever_uid}: {message_content}\n"  
+    message_text = f"{datetime.now().strftime('%Y-%m-%d %H:%M')}: {sender.uid}@{reciever_uid}: {message_content}\n"  
 
     if(db.has_client(reciever_uid)):
         reciever: Client = db.get_client(reciever_uid)
