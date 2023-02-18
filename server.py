@@ -29,10 +29,10 @@ def send_message(sender: Client, reciever: Client, message: str):
     if(sender is not reciever):
         if(reciever.is_online):
             reciever.socket.send(message.encode('ascii'))
-            sender.socket.send(f"{datetime.now().strftime('%Y-%m-%d %H:%M')}: {reciever.uid} recieved your message\n".encode('ascii'))
+            sender.socket.send(f"{bcolors.OKGREEN}{datetime.now().strftime('%Y-%m-%d %H:%M')}: {reciever.uid} recieved your message{bcolors.ENDC}\n".encode('ascii'))
         else:
             reciever.buffered_messages.append(message)    
-            sender.socket.send(f"{datetime.now().strftime('%Y-%m-%d %H:%M')}: {reciever.uid} is offline. Last seen at {reciever.last_online.strftime('%Y-%m-%d %H:%M')}\n".encode('ascii'))
+            sender.socket.send(f"{bcolors.WARNING}{datetime.now().strftime('%Y-%m-%d %H:%M')}: {reciever.uid} is offline. Last seen at {reciever.last_online.strftime('%Y-%m-%d %H:%M')}{bcolors.ENDC}\n".encode('ascii'))
 
 def group_broadcast(sender: Client, group: Group, message: str):
     for i, member in enumerate(group.members):
