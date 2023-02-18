@@ -7,6 +7,7 @@ from exceptions import ServerException, UidNotFoundException
 from persistence import Group, Client, Persistence
 from colors import bcolors
 
+
 host = "::" # Listen on all available interfaces (both ipv4 and ipv6)
 port = 8080 
 
@@ -32,6 +33,9 @@ def send_message(sender: Client, reciever: Client, message: str):
     else:
         reciever.buffered_messages.append(text)    
         sender.socket.send(f"{datetime.now()}: {reciever.uid} is offline. Last seen at {reciever.last_online}".encode('ascii'))
+
+def group_broadcast(sender: Client, group: Group, message: str):
+    pass
 
 
 def process_message(sender: Client, message: ParsedMsg): 
@@ -61,11 +65,17 @@ def handle(client: Client):
                 case Action.GROUP_CREATE:
                     group_uid: str = msg['args']['group_uid']
                     db.create_group(group_uid, client)
-                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} successfully created{bcolors.ENDC}".encode('ascii')) 
+                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} created{bcolors.ENDC}".encode('ascii')) 
                 case Action.GROUP_DELETE:
                     group_uid: str = msg['args']['group_uid']
                     db.delete_group(group_uid, client)
-                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} successfully deleted{bcolors.ENDC}".encode('ascii'))
+                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} deleted{bcolors.ENDC}".encode('ascii'))
+                case Action.GROUP_RENAME:
+                    group_uid: str = msg['args']['group_uid']
+                    new_uid: str = msg['args']['new_uid']
+                    db.rename_group(group_uid, new_uid, client)
+                    client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} renamed to {new_uid}{bcolors.ENDC}".encode('ascii'))
+
                 case Action.GROUP_ADD_USER:
                     group: Group = db.get_group(msg['args']['group_uid'])
                     client_uids: List[str] = msg['args']['client_uids']                    

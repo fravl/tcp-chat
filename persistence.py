@@ -69,10 +69,16 @@ class Persistence():
     def has_group(self, uid: str):
         return uid in self.__groups.keys()
 
-    def update_Group(self, group: Group, client: Client):
-        _group: Group = self.get_group(group.uid)
-        if(self.__can_modify(client, _group)):
-            self.__groups.update({group.uid: group})
+    def rename_group(self, old_uid: str, new_uid: str, client: Client):
+        _group: Group = self.get_group(old_uid)
+        if(self.__can_modify(client, _group)):            
+            if(new_uid in self.__groups.keys()):
+                raise DuplicateUidException(f"Group {new_uid} already exists")
+            _group.uid = new_uid            
+            self.__groups.update({new_uid: _group})
+            self.__groups.pop(old_uid)
+            
+            
 
     def __can_modify(self, client: Client, group: Group) -> bool:
         if group.owner.uid is not client.uid:

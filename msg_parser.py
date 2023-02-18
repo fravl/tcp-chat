@@ -8,6 +8,7 @@ class Action(Enum):
     GROUP_DELETE = "group_delete"
     GROUP_ADD_USER = "group_add_user"
     GROUP_REMOVE_USER = "group_remove_user"
+    GROUP_RENAME = "group_rename"
 
 
 class ParsedMsg(TypedDict):
@@ -42,6 +43,17 @@ def parse(msg: str) -> ParsedMsg:
                 "action": Action.GROUP_DELETE,
                 "args": {"group_uid": split_msg[1]}
             }
+        if(split_msg[2] == "rename"):
+            if(len(split_msg) != 4):
+                raise ParserException(f"Unkown command {msg}")
+            return {
+                "action": Action.GROUP_RENAME,
+                "args": {
+                    "group_uid": split_msg[1],
+                    "new_uid": split_msg[3]
+                }
+            }
+
         if(split_msg[2] == "add" or split_msg[2] == "remove"):
             if(len(split_msg) <=3):
                 raise ParserException(f"Missing user in command {msg}")
