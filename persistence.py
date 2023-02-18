@@ -17,6 +17,18 @@ class Group():
         self.owner: Client = owner
         self.members: List[Client] = []  
 
+    def add_member(self, member: Client, client: Client):
+        if(client is not self.owner):
+            raise UnauthorizedAccessException(f"{client.uid} is not authorized to modify group {self.uid}")
+        if(member not in self.members):
+            self.members.append(member)
+    
+    def remove_member(self, member: Client, client: Client):
+        if(client is not self.owner):
+            raise UnauthorizedAccessException(f"{client.uid} is not authorized to modify group {self.uid}")
+        if(member in self.members):
+            self.members.remove(member)
+
 class Persistence():
     __clients = {}
     __groups = {}
@@ -47,7 +59,7 @@ class Persistence():
     def get_group(self, uid: str):
         if uid not in self.__groups.keys():
             raise UidNotFoundException(f"Group {uid} cannot be found")
-        self.__groups.get(uid)
+        return self.__groups.get(uid)
 
     def delete_group(self, uid: str, client: Client):
         _group: Group = self.get_group(uid)
@@ -64,7 +76,7 @@ class Persistence():
 
     def __can_modify(self, client: Client, group: Group) -> bool:
         if group.owner.uid is not client.uid:
-            raise UnauthorizedAccessException(f"{client.uid} is not owner of group {group.uid}")
+            raise UnauthorizedAccessException(f"{client.uid} is is not authorized to modify group {group.uid}")
         return True
 
 
