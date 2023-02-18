@@ -25,17 +25,20 @@ s.listen(5) # Now wait for client connection.
 
 db = Persistence()
 
-def send_message(sender: Client, reciever: Client, message: str):   
-    if(reciever.is_online):
-        reciever.socket.send(message.encode('ascii'))
-        sender.socket.send(f"{datetime.now()}: {reciever.uid} recieved your message".encode('ascii'))
-    else:
-        reciever.buffered_messages.append(message)    
-        sender.socket.send(f"{datetime.now()}: {reciever.uid} is offline. Last seen at {reciever.last_online}".encode('ascii'))
+def send_message(sender: Client, reciever: Client, message: str): 
+    if(sender is not reciever):
+        if(reciever.is_online):
+            reciever.socket.send(message.encode('ascii'))
+            sender.socket.send(f"{datetime.now()}: {reciever.uid} recieved your message".encode('ascii'))
+        else:
+            reciever.buffered_messages.append(message)    
+            sender.socket.send(f"{datetime.now()}: {reciever.uid} is offline. Last seen at {reciever.last_online}".encode('ascii'))
 
 def group_broadcast(sender: Client, group: Group, message: str):
-    for member in group.members:
+    for i, member in enumerate(group.members):
         send_message(sender, member, message)
+    if(i<1):
+        sender.socket.send(f"{bcolors.WARNING}You are the only member of {group.uid} {bcolors.ENDC}".encode('ascii'))
 
 def process_message(sender: Client, message: ParsedMsg): 
     reciever_uid = message["args"]["uid"]     
@@ -47,7 +50,7 @@ def process_message(sender: Client, message: ParsedMsg):
         reciever: Client = db.get_client(reciever_uid)
         send_message(sender, reciever, message_text)
     elif(db.has_group(reciever_uid)):
-        group: Group = db.get_group(reciever_uid)
+        group: Group = db.get_group(reciever_uid)            
         group_broadcast(sender, group, message_text)
     else: 
         raise UidNotFoundException(f"No known group or user with name {reciever_uid}")
@@ -64,14 +67,17 @@ def handle(client: Client):
             match msg["action"]:
                 case Action.MESSAGE:                    
                     process_message(client, msg)
+
                 case Action.GROUP_CREATE:
                     group_uid: str = msg['args']['group_uid']
                     db.create_group(group_uid, client)
                     client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} created{bcolors.ENDC}\n".encode('ascii')) 
+                
                 case Action.GROUP_DELETE:
                     group_uid: str = msg['args']['group_uid']
                     db.delete_group(group_uid, client)
                     client.socket.send(f"{bcolors.OKGREEN}Group {group_uid} deleted{bcolors.ENDC}\n".encode('ascii'))
+                
                 case Action.GROUP_RENAME:
                     group_uid: str = msg['args']['group_uid']
                     new_uid: str = msg['args']['new_uid']
@@ -92,6 +98,7 @@ def handle(client: Client):
                         except UidNotFoundException as e:
                             client.socket.send(f"{bcolors.FAIL}Error{bcolors.ENDC}: {e}\n".encode('ascii')) 
                             continue                       
+                
                 case Action.GROUP_REMOVE_USER:
                     group: Group = db.get_group(msg['args']['group_uid'])
                     client_uids: List[str] = msg['args']['client_uids']                    

@@ -25,8 +25,7 @@ def receive():
 
 def write():
     while True:
-        message = input("")
-        #print('\033[1A' + '\033[K', end='')
+        message = input("")     
         if(message == "exit"):
             s.close()
             break

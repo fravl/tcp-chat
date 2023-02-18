@@ -1,7 +1,7 @@
 import socket
 from datetime import datetime
 from typing import List
-from exceptions import UidNotFoundException, DuplicateUidException, UnauthorizedAccessException
+from exceptions import UidNotFoundException, DuplicateUidException, OperationNotPermitted
 
 class Client():
     def __init__(self, uid: str, client_socket: socket):
@@ -15,17 +15,19 @@ class Group():
     def __init__(self, uid: str, owner: Client):
         self.uid: str = uid
         self.owner: Client = owner
-        self.members: List[Client] = []  
+        self.members: List[Client] = [owner]  
 
     def add_member(self, member: Client, client: Client):
         if(client is not self.owner):
-            raise UnauthorizedAccessException(f"{client.uid} is not authorized to modify group {self.uid}")
+            raise OperationNotPermitted(f"{client.uid} is not authorized to modify group {self.uid}")
         if(member not in self.members):
             self.members.append(member)
     
     def remove_member(self, member: Client, client: Client):
         if(client is not self.owner):
-            raise UnauthorizedAccessException(f"{client.uid} is not authorized to modify group {self.uid}")
+            raise OperationNotPermitted(f"{client.uid} is not authorized to modify group {self.uid}")
+        if(member is self.owner):
+            raise OperationNotPermitted(f"Owner {client.uid} cannot be removed from group {self.uid}")
         if(member in self.members):
             self.members.remove(member)
 
@@ -82,7 +84,7 @@ class Persistence():
 
     def __can_modify(self, client: Client, group: Group) -> bool:
         if group.owner.uid is not client.uid:
-            raise UnauthorizedAccessException(f"{client.uid} is is not authorized to modify group {group.uid}")
+            raise OperationNotPermitted(f"{client.uid} is is not authorized to modify group {group.uid}")
         return True
 
 

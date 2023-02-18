@@ -7,5 +7,5 @@ class UidNotFoundException(ServerException):
     pass
 class DuplicateUidException(ServerException):
     pass
-class UnauthorizedAccessException(ServerException):
+class OperationNotPermitted(ServerException):
     pass
