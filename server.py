@@ -3,7 +3,7 @@ import threading
 from typing import List
 from datetime import datetime
 from msg_parser import *
-from exceptions import ServerException, UidNotFoundException
+from exceptions import OperationNotPermitted, ServerException, UidNotFoundException
 from persistence import Group, Client, Persistence
 from colors import bcolors
 
@@ -34,6 +34,8 @@ def send_message(sender: Client, reciever: Client, message: str):
             sender.socket.send(f"{bcolors.WARNING}{datetime.now().strftime('%Y-%m-%d %H:%M')}: {reciever.uid} is offline. Last seen at {reciever.last_online.strftime('%Y-%m-%d %H:%M')}{bcolors.ENDC}\n".encode('ascii'))
 
 def group_broadcast(sender: Client, group: Group, message: str):
+    if(sender not in group.members):
+        raise OperationNotPermitted(f"You are not a member of {group.uid}")
     for i, member in enumerate(group.members):
         send_message(sender, member, message)
     if(i<1):
