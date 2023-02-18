@@ -17,51 +17,55 @@ class Group():
         self.owner: Client = owner
         self.members: List[Client] = []  
 
-__clients = {}
-__groups = {}
+class Persistence():
+    __clients = {}
+    __groups = {}
 
-def create_client(uid: str, client_socket: socket) -> Client:
-    if uid in __clients.keys():
-        raise DuplicateUidException(f"User name {uid} already exists")
-    __clients.update({uid: Client(uid, client_socket)})
-    return __clients.get(uid)
+    def __init__(self) -> None:
+        pass
 
-def get_client(uid: str) -> Client:
-    if uid not in __clients.keys():
-        raise UidNotFoundException(f"User {uid} cannot be found")
-    return __clients.get(uid)
+    def create_client(self, uid: str, client_socket: socket) -> Client:
+        if uid in self.__clients.keys():
+            raise DuplicateUidException(f"User name {uid} already exists")
+        self.__clients.update({uid: Client(uid, client_socket)})
+        return self.__clients.get(uid)
 
-def has_client(uid: str) -> bool:
-    return uid in __clients.keys()
+    def get_client(self, uid: str) -> Client:
+        if uid not in self.__clients.keys():
+            raise UidNotFoundException(f"User {uid} cannot be found")
+        return self.__clients.get(uid)
 
-def create_group(uid: str, owner: Client) -> Group:
-    if uid in __groups.keys():
-        raise DuplicateUidException(f"Group name {uid} already exists")
-    __groups.update({uid: Group(uid, owner)})
-    return __groups.get(uid)
+    def has_client(self, uid: str) -> bool:
+        return uid in self.__clients.keys()
 
-def get_group(uid: str):
-    if uid not in __groups.keys():
-        raise UidNotFoundException(f"Group {uid} cannot be found")
-    __groups.get(uid)
+    def create_group(self, uid: str, owner: Client) -> Group:
+        if uid in self.__groups.keys():
+            raise DuplicateUidException(f"Group name {uid} already exists")
+        self.__groups.update({uid: Group(uid, owner)})
+        return self.__groups.get(uid)
 
-def delete_group(uid: str, client: Client):
-    _group: Group = get_group(uid)
-    if(__can_modify(client, _group)):
-        __groups.pop(uid)
+    def get_group(self, uid: str):
+        if uid not in self.__groups.keys():
+            raise UidNotFoundException(f"Group {uid} cannot be found")
+        self.__groups.get(uid)
 
-def has_group(uid: str):
-    return uid in __groups.keys()
+    def delete_group(self, uid: str, client: Client):
+        _group: Group = self.get_group(uid)
+        if(self.__can_modify(client, _group)):
+            self.__groups.pop(uid)
 
-def update_Group(group: Group, client: Client):
-    _group: Group = get_group(group.uid)
-    if(__can_modify(client, _group)):
-        __groups.update({group.uid: group})
+    def has_group(self, uid: str):
+        return uid in self.__groups.keys()
 
-def __can_modify(client: Client, group: Group) -> bool:
-    if group.owner.uid is not client.uid:
-        raise UnauthorizedAccessException(f"{client.uid} is not owner of group {group.uid}")
-    return True
+    def update_Group(self, group: Group, client: Client):
+        _group: Group = self.get_group(group.uid)
+        if(self.__can_modify(client, _group)):
+            self.__groups.update({group.uid: group})
+
+    def __can_modify(self, client: Client, group: Group) -> bool:
+        if group.owner.uid is not client.uid:
+            raise UnauthorizedAccessException(f"{client.uid} is not owner of group {group.uid}")
+        return True
 
 
 
