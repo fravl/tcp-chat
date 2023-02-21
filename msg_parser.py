@@ -18,6 +18,8 @@ class ParsedMsg(TypedDict):
 
 def parse(msg: str) -> ParsedMsg:
     split_msg = msg.split(None, 1)
+
+    # parse messages of format "@<recipient> message"
     if(str(split_msg[0]).startswith("@")):
         recipient_uid = split_msg[0][1:]
         if(len(split_msg)>1):
@@ -28,6 +30,8 @@ def parse(msg: str) -> ParsedMsg:
             "action": Action.MESSAGE, 
             "args": {'uid': recipient_uid, 'msg': content}
             }
+
+    # parse group commands. All group commands start with group <name> ...
     if(str(split_msg[0]) == "group"):
         split_msg = msg.split(" ")
         if(len(split_msg) <= 2):
@@ -53,7 +57,8 @@ def parse(msg: str) -> ParsedMsg:
                     "new_uid": split_msg[3]
                 }
             }
-
+            
+        # parse group add or remove user(s) commands of form group <name> add <user> ...
         if(split_msg[2] == "add" or split_msg[2] == "remove"):
             if(len(split_msg) <=3):
                 raise ParserException(f"Missing user in command {msg}")
